@@ -35,7 +35,7 @@ export default function Part({ id }: { id: string }) {
     >
       {partQuery.isError || allowableStatusesQuery.isError ? (
         <div>
-          Error:{" "}
+          Part error:{" "}
           {partQuery.error?.message ?? allowableStatusesQuery.error?.message}
         </div>
       ) : (

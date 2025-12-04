@@ -17,14 +17,6 @@ export default function App() {
   const [_debugging, setDebugging] = useState(false);
   const debugging = _debugging && import.meta.env.DEV;
 
-  if (isPending) {
-    return "Loading";
-  }
-
-  if (error) {
-    return `Error: ${error.message}`;
-  }
-
   return (
     <DebugViewEnabledContext.Provider value={debugging}>
       {import.meta.env.DEV && (
@@ -50,7 +42,11 @@ export default function App() {
           padding: 64,
         }}
       >
-        {parentConfigurations.length > 0 ? (
+        {isPending ? (
+          <div>Loading</div>
+        ) : error ? (
+          <div>{`Error: ${error.message}`}</div>
+        ) : parentConfigurations.length > 0 ? (
           parentConfigurations.map(({ uuid, partUuid, endUnitSerialNo }) => (
             <Configuration
               key={uuid}

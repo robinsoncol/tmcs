@@ -42,25 +42,25 @@ export default function Configuration({
       >
         {parentPartQuery.data.name} - {`Serial No: ${endUnitSerialNo ?? "N/A"}`}
       </div>
-      {childrenConfigurationsQuery.data.length > 0 ? (
-        <div
-          style={{
-            border: "1px solid black",
-            boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.25)",
-            padding: 12,
-            borderRadius: 6,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 20,
-          }}
-        >
-          {childrenConfigurationsQuery.data.map(({ partUuid }) => (
+      <div
+        style={{
+          border: "1px solid black",
+          boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.25)",
+          padding: 12,
+          borderRadius: 6,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 20,
+        }}
+      >
+        {childrenConfigurationsQuery.data.length > 0 ? (
+          childrenConfigurationsQuery.data.map(({ partUuid }) => (
             <Part key={partUuid} id={partUuid} />
-          ))}
-        </div>
-      ) : (
-        <div>No configurations found</div>
-      )}
+          ))
+        ) : (
+          <div>No configurations found</div>
+        )}
+      </div>
     </div>
   );
 }
