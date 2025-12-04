@@ -49,7 +49,7 @@ export default function Part({ id }: { id: string }) {
           >
             {partQuery.isPending ? "..." : partQuery.data.name}
           </div>
-          {debugging && <div>{id}</div>}
+          {debugging && <div>UUID: {id}</div>}
           {partQuery.isPending || allowableStatusesQuery.isPending ? (
             <PartPlaceholder />
           ) : (
@@ -133,9 +133,9 @@ function PartForm({
 }) {
   return (
     <form onSubmit={onSubmit}>
-      <div>Unit: {unit}</div>
-      <div>Version: {version}</div>
-      <div>Status: {status}</div>
+      <label style={{ display: "block" }}>Unit: {unit}</label>
+      <label style={{ display: "block" }}>Version: {version}</label>
+      <label style={{ display: "block" }}>Status: {status}</label>
     </form>
   );
 }
