@@ -3,13 +3,10 @@ import { fetchParentConfigurations } from "./api";
 import Configuration from "./components/Configuration";
 import DebugViewEnabledContext from "./DebugViewContext";
 import { useState } from "react";
+import ActionError from "./components/ActionError";
 
 export default function App() {
-  const {
-    isPending,
-    error,
-    data: parentConfigurations,
-  } = useQuery({
+  const configurationsQuery = useQuery({
     queryKey: ["configurations"],
     queryFn: () => fetchParentConfigurations(),
   });
@@ -42,19 +39,28 @@ export default function App() {
           padding: 64,
         }}
       >
-        {isPending ? (
+        {configurationsQuery.isPending ? (
           <div>Loading</div>
-        ) : error ? (
-          <div>{`Error: ${error.message}`}</div>
-        ) : parentConfigurations.length > 0 ? (
-          parentConfigurations.map(({ uuid, partUuid, endUnitSerialNo }) => (
-            <Configuration
-              key={uuid}
-              id={uuid}
-              partId={partUuid}
-              endUnitSerialNo={endUnitSerialNo}
-            />
-          ))
+        ) : configurationsQuery.isError ? (
+          <ActionError
+            error={configurationsQuery.error}
+            action={{
+              title: "Reload",
+              disabled: configurationsQuery.isFetching,
+              onClick: () => configurationsQuery.refetch(),
+            }}
+          />
+        ) : configurationsQuery.data.length > 0 ? (
+          configurationsQuery.data.map(
+            ({ uuid, partUuid, endUnitSerialNo }) => (
+              <Configuration
+                key={uuid}
+                id={uuid}
+                partId={partUuid}
+                endUnitSerialNo={endUnitSerialNo}
+              />
+            ),
+          )
         ) : (
           <div>No Parent Configurations found</div>
         )}

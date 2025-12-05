@@ -10,6 +10,7 @@ import {
 } from "../api";
 import DebugViewEnabledContext from "../DebugViewContext";
 import { formatStatus, type Status } from "../status";
+import ActionError from "./ActionError";
 
 export default function Part({ id }: { id: string }) {
   const debugging = useContext(DebugViewEnabledContext);
@@ -33,11 +34,24 @@ export default function Part({ id }: { id: string }) {
         borderRadius: 4,
       }}
     >
-      {partQuery.isError || allowableStatusesQuery.isError ? (
-        <div>
-          Part error:{" "}
-          {partQuery.error?.message ?? allowableStatusesQuery.error?.message}
-        </div>
+      {partQuery.isError ? (
+        <ActionError
+          error={partQuery.error}
+          action={{
+            title: "Reload",
+            disabled: partQuery.isFetching,
+            onClick: () => partQuery.refetch(),
+          }}
+        />
+      ) : allowableStatusesQuery.isError ? (
+        <ActionError
+          error={allowableStatusesQuery.error}
+          action={{
+            title: "Reload",
+            disabled: allowableStatusesQuery.isFetching,
+            onClick: () => allowableStatusesQuery.refetch(),
+          }}
+        />
       ) : (
         <>
           <div

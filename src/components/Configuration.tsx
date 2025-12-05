@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Part from "./Part";
 import { fetchChildrenConfigurations, fetchPart } from "../api";
+import ActionError from "./ActionError";
 
 export default function Configuration({
   id,
@@ -21,13 +22,29 @@ export default function Configuration({
     queryFn: () => fetchChildrenConfigurations({ id }),
   });
 
-  if (parentPartQuery.error || childrenConfigurationsQuery.error) {
+  if (parentPartQuery.isError) {
     return (
-      <div>
-        Error:{" "}
-        {parentPartQuery.error?.message ??
-          childrenConfigurationsQuery.error?.message}
-      </div>
+      <ActionError
+        error={parentPartQuery.error}
+        action={{
+          title: "Reload",
+          onClick: () => parentPartQuery.refetch(),
+          disabled: parentPartQuery.isFetching,
+        }}
+      />
+    );
+  }
+
+  if (childrenConfigurationsQuery.isError) {
+    return (
+      <ActionError
+        error={childrenConfigurationsQuery.error}
+        action={{
+          title: "Reload",
+          onClick: () => childrenConfigurationsQuery.refetch(),
+          disabled: childrenConfigurationsQuery.isFetching,
+        }}
+      />
     );
   }
 
