@@ -69,8 +69,8 @@ export default function Part({ id }: { id: string }) {
           ) : (
             <PartBody
               part={partQuery.data}
-              allowableStatuses={allowableStatusesQuery.data}
-              onChange={allowableStatusesQuery.refetch}
+              allowableStatuses={allowableStatusesQuery.data.allowableStatuses}
+              onChange={partQuery.refetch}
             />
           )}
         </>
@@ -81,22 +81,22 @@ export default function Part({ id }: { id: string }) {
 
 function PartBody({
   part,
-  allowableStatuses: { currentStatus, allowableStatuses },
+  allowableStatuses,
   onChange,
 }: {
   part: APIPart;
-  allowableStatuses: APIAllowableStatuses;
+  allowableStatuses: APIAllowableStatuses["allowableStatuses"];
   onChange: () => void;
 }) {
   const form = useForm<{ status: Status }>({
     defaultValues: {
-      status: currentStatus,
+      status: part.status,
     },
   });
 
   useEffect(() => {
-    form.reset({ status: currentStatus });
-  }, [form, currentStatus]);
+    form.reset({ status: part.status });
+  }, [form, part.status]);
 
   return (
     <PartForm
