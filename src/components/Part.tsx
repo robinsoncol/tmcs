@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import {
   fetchPart,
   fetchPartAllowableStatuses,
   InvalidStatusChangeError,
   updatePart,
-  type APIAllowableStatuses,
   type APIPart,
 } from "../api";
 import { formatStatus, type Status } from "../status";
@@ -19,11 +18,6 @@ export default function Part({ id }: { id: string }) {
   const partQuery = useQuery({
     queryKey: ["part", id],
     queryFn: () => fetchPart({ id }),
-  });
-
-  const allowableStatusesQuery = useQuery({
-    queryKey: ["allowable-statuses", id],
-    queryFn: () => fetchPartAllowableStatuses({ id }),
   });
 
   return (
@@ -44,15 +38,6 @@ export default function Part({ id }: { id: string }) {
             onClick: () => partQuery.refetch(),
           }}
         />
-      ) : allowableStatusesQuery.isError ? (
-        <ActionError
-          error={allowableStatusesQuery.error}
-          action={{
-            title: "Reload",
-            disabled: allowableStatusesQuery.isFetching,
-            onClick: () => allowableStatusesQuery.refetch(),
-          }}
-        />
       ) : (
         <>
           <div
@@ -65,12 +50,12 @@ export default function Part({ id }: { id: string }) {
             {partQuery.isPending ? "..." : partQuery.data.name}
           </div>
           {debugging && <div>UUID: {id}</div>}
-          {partQuery.isPending || allowableStatusesQuery.isPending ? (
+          {partQuery.isPending ? (
             <PartPlaceholder />
           ) : (
             <PartBody
               part={partQuery.data}
-              allowableStatuses={allowableStatusesQuery.data.allowableStatuses}
+              // allowableStatuses={allowableStatusesQuery.data.allowableStatuses}
               // We want to update the partQuery cache so that other Part components
               // with the same part id are rerendered with the updated data
               onChange={partQuery.refetch}
@@ -82,15 +67,12 @@ export default function Part({ id }: { id: string }) {
   );
 }
 
-function PartBody({
-  part,
-  allowableStatuses: _allowableStatuses,
-  onChange,
-}: {
-  part: APIPart;
-  allowableStatuses: APIAllowableStatuses["allowableStatuses"];
-  onChange: () => void;
-}) {
+function PartBody({ part, onChange }: { part: APIPart; onChange: () => void }) {
+  const allowableStatusesQuery = useQuery({
+    queryKey: ["part-allowable-statuses", part.uuid],
+    queryFn: () => fetchPartAllowableStatuses({ id: part.uuid }),
+  });
+
   const form = useForm<{ status: Status }>({
     defaultValues: {
       status: part.status,
@@ -101,10 +83,7 @@ function PartBody({
     form.reset({ status: part.status });
   }, [form, part.status]);
 
-  const [allowableStatuses, setAllowableStatuses] =
-    useState(_allowableStatuses);
-
-  const submit = form.handleSubmit(async (values) => {
+  const update = form.handleSubmit(async (values) => {
     try {
       await updatePart({
         id: part.uuid,
@@ -113,7 +92,9 @@ function PartBody({
       onChange();
     } catch (e) {
       if (e instanceof InvalidStatusChangeError) {
-        setAllowableStatuses(e.allowableStatuses);
+        // The user might be trying to update status with a stale value. Refresh the
+        // list of allowed statuses to make sure that they have the latest values
+        allowableStatusesQuery.refetch();
         alert(e.message);
       } else {
         alert("Unexpected Error Occurred");
@@ -121,21 +102,41 @@ function PartBody({
     }
   });
 
+  if (allowableStatusesQuery.error) {
+    return (
+      <ActionError
+        error={allowableStatusesQuery.error}
+        action={{
+          title: "Reload",
+          disabled: allowableStatusesQuery.isFetching,
+          onClick: () => allowableStatusesQuery.refetch(),
+        }}
+      />
+    );
+  }
+
   return (
     <PartForm
-      onSubmit={submit}
+      onSubmit={update}
       unit={part.unit}
       version={part.version ?? "N/A"}
       status={
         <>
-          <select {...form.register("status", { required: true })}>
-            {allowableStatuses.map((status) => (
-              <option key={status} value={status}>
-                {formatStatus(status)}
-              </option>
-            ))}
+          <select
+            {...form.register("status", { required: true })}
+            disabled={!allowableStatusesQuery.isSuccess}
+          >
+            {allowableStatusesQuery.isSuccess ? (
+              allowableStatusesQuery.data.allowableStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {formatStatus(status)}
+                </option>
+              ))
+            ) : (
+              <option key="placeholder">Loading...</option>
+            )}
           </select>
-          {form.formState.isDirty && (
+          {form.formState.isDirty && allowableStatusesQuery.isSuccess && (
             <button type="submit" disabled={form.formState.isSubmitting}>
               Submit
             </button>
