@@ -96,7 +96,7 @@ function PartBody({ part, onChange }: { part: APIPart; onChange: () => void }) {
         allowableStatusesQuery.refetch();
         alert(e.message);
       } else {
-        alert("Unexpected Error Occurred");
+        alert("Unexpected error occurred");
       }
     }
   });
