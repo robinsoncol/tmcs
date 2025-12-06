@@ -12,5 +12,6 @@ const statuses = {
 } as const;
 
 export function formatStatus(key: Status): string {
-  return statuses[key];
+  const status = statuses[key];
+  return status ?? key;
 }

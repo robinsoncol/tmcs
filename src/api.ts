@@ -53,7 +53,24 @@ export function updatePart({
     headers: {
       "content-type": "application/json",
     },
+  }).catch((e: unknown) => {
+    if (e instanceof Error && e.message.includes("invalid_value")) {
+      // This is a weird way to read the error message. Might be a bug on the backend
+      const data = JSON.parse(e.message)[0];
+      throw new InvalidStatusChangeError(data.message, data.values);
+    }
+
+    throw e;
   });
+}
+
+export class InvalidStatusChangeError extends Error {
+  allowableStatuses: Status[];
+
+  constructor(message: string, allowableStatuses: Status[]) {
+    super(message);
+    this.allowableStatuses = allowableStatuses;
+  }
 }
 
 async function apiFetch<T>(...args: Parameters<typeof fetch>): Promise<T> {
@@ -69,6 +86,24 @@ async function apiFetch<T>(...args: Parameters<typeof fetch>): Promise<T> {
       },
     },
   );
+
+  // Note: This isn't a robust solution. A library like axios might handle this better
+  if (!response.ok) {
+    if (response.headers.get("Content-Type")?.includes("application/json")) {
+      const data = await response.json();
+
+      if (data.error && data.error.name && data.error.message) {
+        const error = new Error();
+        error.name = data.error.name;
+        error.message = data.error.message;
+        throw error;
+      }
+
+      throw data;
+    }
+
+    throw new Error("Something went wrong");
+  }
 
   return response.json();
 }

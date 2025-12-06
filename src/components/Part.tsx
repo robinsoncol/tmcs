@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect, type ReactNode } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import {
   fetchPart,
   fetchPartAllowableStatuses,
+  InvalidStatusChangeError,
   updatePart,
   type APIAllowableStatuses,
   type APIPart,
@@ -70,6 +71,8 @@ export default function Part({ id }: { id: string }) {
             <PartBody
               part={partQuery.data}
               allowableStatuses={allowableStatusesQuery.data.allowableStatuses}
+              // We want to update the partQuery cache so that other Part components
+              // with the same part id are rerendered with the updated data
               onChange={partQuery.refetch}
             />
           )}
@@ -81,7 +84,7 @@ export default function Part({ id }: { id: string }) {
 
 function PartBody({
   part,
-  allowableStatuses,
+  allowableStatuses: _allowableStatuses,
   onChange,
 }: {
   part: APIPart;
@@ -98,16 +101,29 @@ function PartBody({
     form.reset({ status: part.status });
   }, [form, part.status]);
 
+  const [allowableStatuses, setAllowableStatuses] =
+    useState(_allowableStatuses);
+
+  const submit = form.handleSubmit(async (values) => {
+    try {
+      await updatePart({
+        id: part.uuid,
+        values,
+      });
+      onChange();
+    } catch (e) {
+      if (e instanceof InvalidStatusChangeError) {
+        setAllowableStatuses(e.allowableStatuses);
+        alert(e.message);
+      } else {
+        alert("Unexpected Error Occurred");
+      }
+    }
+  });
+
   return (
     <PartForm
-      onSubmit={form.handleSubmit(async (values) => {
-        try {
-          await updatePart({ id: part.uuid, values });
-          onChange();
-        } catch (e) {
-          alert(e instanceof Error ? e.message : "Unexpected error occurred");
-        }
-      })}
+      onSubmit={submit}
       unit={part.unit}
       version={part.version ?? "N/A"}
       status={
