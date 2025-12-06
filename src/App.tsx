@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchParentConfigurations } from "./api";
 import Configuration from "./components/Configuration";
-import DebugViewEnabledContext from "./DebugViewContext";
-import { useState } from "react";
 import ActionError from "./components/ActionError";
+import { DebugViewEnabledProvider } from "./components/DebugViewProvider";
 
 export default function App() {
   const configurationsQuery = useQuery({
@@ -11,25 +10,8 @@ export default function App() {
     queryFn: () => fetchParentConfigurations(),
   });
 
-  const [_debugging, setDebugging] = useState(false);
-  const debugging = _debugging && import.meta.env.DEV;
-
   return (
-    <DebugViewEnabledContext.Provider value={debugging}>
-      {import.meta.env.DEV && (
-        <div>
-          <label>
-            Show debug view:{" "}
-            <input
-              type="checkbox"
-              checked={debugging}
-              onChange={() => {
-                setDebugging((value) => !value);
-              }}
-            />
-          </label>
-        </div>
-      )}
+    <DebugViewEnabledProvider>
       <div
         style={{
           display: "flex",
@@ -65,6 +47,6 @@ export default function App() {
           <div>No Parent Configurations found</div>
         )}
       </div>
-    </DebugViewEnabledContext.Provider>
+    </DebugViewEnabledProvider>
   );
 }

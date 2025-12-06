@@ -8,9 +8,9 @@ import {
   type APIAllowableStatuses,
   type APIPart,
 } from "../api";
-import DebugViewEnabledContext from "../DebugViewContext";
 import { formatStatus, type Status } from "../status";
 import ActionError from "./ActionError";
+import DebugViewEnabledContext from "./DebugViewEnabledContext";
 
 export default function Part({ id }: { id: string }) {
   const debugging = useContext(DebugViewEnabledContext);
