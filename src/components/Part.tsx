@@ -79,6 +79,7 @@ function PartBody({ part, onChange }: { part: APIPart; onChange: () => void }) {
   });
 
   useEffect(() => {
+    // We do this to reset form.formState.isDirty
     form.reset({ status: part.status });
   }, [form, part.status]);
 
