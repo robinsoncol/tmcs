@@ -55,7 +55,6 @@ export default function Part({ id }: { id: string }) {
           ) : (
             <PartBody
               part={partQuery.data}
-              // allowableStatuses={allowableStatusesQuery.data.allowableStatuses}
               // We want to update the partQuery cache so that other Part components
               // with the same part id are rerendered with the updated data
               onChange={partQuery.refetch}
